@@ -1,0 +1,102 @@
+{
+  "name": "Process_form",
+  "parameters": [
+    {
+      "type": "json",
+      "name": "input",
+      "displayName": "Input Data",
+      "default": "https://github.com/sendanor/pipeline-example.git"
+    },
+    {
+      "type": "string",
+      "name": "inputFileName",
+      "displayName": "Input File Name",
+      "default": "input.json"
+    },
+    {
+      "type": "string",
+      "name": "outputFileName",
+      "displayName": "Output File Name",
+      "default": "output.txt"
+    },
+    {
+      "type": "string",
+      "name": "gitRepository",
+      "displayName": "Git Repository",
+      "default": "https://github.com/sendanor/pipeline-example.git"
+    },
+    {
+      "type": "string",
+      "name": "wpAccessKey",
+      "displayName": "WordPress Output AccessKey"
+    },
+    {
+      "type": "string",
+      "name": "outputUrl",
+      "displayName": "WordPress Output URL",
+      "default": "https://lomake.app/forms/ID"
+    }
+  ],
+  "variables": {
+    "inputData": "${{input}}",
+    "inputFileName": "${{inputFileName}}",
+    "outputFileName": "${{outputFileName}}",
+    "gitRepository": "${{gitRepository}}",
+    "outputUrl": "${{outputUrl}}",
+    "wpAccessKey": "${{wpAccessKey}}",
+    "gitDir": "/git",
+    "workDir": "/work"
+  },
+  "steps": [
+    {
+      "name": "Prepare_git",
+      "git": "clone",
+      "url": "${gitRepository}",
+      "target": "${gitDir}"
+    },
+    {
+      "name": "Stringify_input",
+      "json": "${inputData}",
+      "action": "stringify",
+      "output": "inputDataString"
+    },
+    {
+      "name": "Write_file",
+      "file": "write",
+      "target": "${workDir}/${inputFileName}",
+      "content": "${inputDataString}"
+    },
+    {
+      "name": "Wait_output",
+      "command": "${gitDir}/wait-file.sh",
+      "args": [
+        "${workDir}/${outputFileName}"
+      ]
+    },
+    {
+      "name": "Set_output",
+      "variable": "outputBody",
+      "set": {
+        "accessKey": "${wpAccessKey}",
+        "title": "New post",
+        "content": "Hello World"
+      }
+    },
+    {
+      "name": "Stringify_output",
+      "json": "${outputBody}",
+      "action": "stringify",
+      "output": "outputBodyString"
+    },
+    {
+      "name": "Post_wp",
+      "command": "curl",
+      "args": [
+        "-X",
+        "-H", "Content-Type: application/json",
+        "-d", "${outputBodyString}",
+        "${outputUrl}"
+      ]
+    }
+  ]
+}

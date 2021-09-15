@@ -1,0 +1,69 @@
+{
+  "name": "Post_wp",
+  "parameters": [
+    {
+      "type": "string",
+      "name": "accessKeyProvided",
+      "displayName": "Access Key (for input)"
+    },
+    {
+      "type": "string",
+      "name": "accessKeyConfigured",
+      "displayName": "Access Key (to check for)"
+    },
+    {
+      "type": "string",
+      "name": "title",
+      "displayName": "Post Title",
+      "default": ""
+    },
+    {
+      "type": "string",
+      "name": "content",
+      "displayName": "Post Content",
+      "default": ""
+    },
+    {
+      "type": "string",
+      "name": "sitePath",
+      "displayName": "WordPress Path",
+      "default": "~/sites/example.com/www"
+    },
+    {
+      "type": "string",
+      "name": "tempDir",
+      "displayName": "Temp Directory",
+      "default": "~/tmp"
+    }
+  ],
+  "variables": {
+    "title": "${{title}}",
+    "contentString": "${{content}}",
+    "sitePath": "${{sitePath}}",
+    "tempDir": "${{tempDir}}"
+  },
+  "steps": [
+    {
+      "name": "Check_access",
+      "assert": "${{accessKeyProvided}}",
+      "equals": "${{accessKeyConfigured}}"
+    },
+    {
+      "name": "Write_content_file",
+      "file": "write",
+      "target": "${tempDir}/content.txt",
+      "content": "${contentString}"
+    },
+    {
+      "name": "Create_post",
+      "command": "wp",
+      "args": [
+        "post",
+        "create",
+        "${tempDir}/content.txt",
+        "--post_title=${title}"
+      ],
+      "cwd": "${sitePath}"
+    }
+  ]
+}
