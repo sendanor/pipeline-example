@@ -16,16 +16,19 @@ environment.
 ## Worker agent flow
 
  1. *Pipeline Runner* software is started in a Docker container with path `/work` shared as a volume from the host system (e.g. `C:\work`)
- 2. *Agent* will wait for an incoming request
- 3. *Agent* will receive incoming pipeline request (e.g. it receives `./worker-pipeline.json` over the network)
- 4. This git repository will be cloned inside the docker container
- 5. The input will be written to `/work` as a file
- 6. The `./wait-file.sh` will be started to wait for output to appear at `/work`
- 7. Pipeline will send request to internal wp form which will queue `./wp-pipeline.json` to post a page on the WordPress system
- 8. Once finished, the container will be restarted and go to the step 1 again.
+ 2. *Agent* waits for an incoming request
+ 3. *Agent* receives a request with form data (e.g. it receives `./worker-pipeline.json` over the network)
+ 4. This git repository is cloned inside the docker container
+ 5. The form input is written to `/work/input.json` as a JSON file
+ 6. `./wait-file.sh` is started to wait for output to appear at `/work/output.XXX`
+ 7. Pipeline sends request to *internal wp-form* (using `curl` and JSON POST request, see step 3 from WordPress flow below)
+ 9. Once finished, the container will be restarted and go to the step 1 again.
 
 ## WordPress agent flow
 
- 1. Agent running on the WordPress system receives request to create a post (see `./wp-pipeline.json`)
- 2. Post is created in the local WordPress installation
+ 1. *Agent 2* is started directly on the web server account where WordPress is installed
+ 2. *Agent 2* waits for requests
+ 3. *Agent 2* receives a request to create a post (see `./wp-pipeline.json` and step 7 above)
+ 4. Post is created in the local WordPress installation using `wp` command
+ 5. *Agent 2* goes back to step 1
  
